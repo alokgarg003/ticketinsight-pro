@@ -2,18 +2,24 @@
 
 # TicketInsight Pro
 
-**Open-Source, Zero-Cost Ticket Analytics Platform**
+**Open-Source, Zero-Cost Ticket Analytics Platform for IT Support Teams**
 
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED?logo=docker)](https://www.docker.com/)
 [![No Paid APIs](https://img.shields.io/badge/Zero_Cost-100%25_Free-success.svg)]()
+[![Flask](https://img.shields.io/badge/Flask-Web_Framework-blue)](https://flask.palletsprojects.com/)
+[![spaCy](https://img.shields.io/badge/spaCy-NLP-orange)](https://spacy.io/)
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-ML-green)](https://scikit-learn.org/)
 
-Transform IT support tickets into actionable insights using NLP & Machine Learning.
-Supports ServiceNow, Jira, CSV import, and any REST API — no API keys required.
+Transform IT support tickets into actionable insights using NLP, Machine Learning, and Analytics.
+Supports ServiceNow, Jira, CSV import, REST API integration — no API keys required.
+Perfect for help desk analytics, incident management, ticket classification, sentiment analysis, duplicate detection, and trend forecasting.
+
+**Keywords:** ticket analytics, IT support, help desk, incident management, NLP, machine learning, Flask, Python, open source, zero cost, ServiceNow, Jira, CSV, REST API, sentiment analysis, duplicate detection, anomaly detection, root cause analysis, topic modeling, dashboard, reporting.
 
 [Features](#features) • [Quick Start](#quick-start) • [Architecture](#architecture) •
-[API Reference](#api-reference) • [Configuration](#configuration) • [Deployment](#deployment)
+[API Reference](#api-reference) • [Configuration](#configuration) • [Deployment](#deployment]
 
 </div>
 
@@ -64,12 +70,15 @@ paying for expensive SaaS analytics add-ons or proprietary AI features.
 
 ### Why TicketInsight Pro?
 
-- **Zero Cost**: No paid APIs, no cloud dependencies, no per-seat licensing. Everything runs locally or on your own infrastructure.
-- **Privacy First**: Your ticket data never leaves your environment. No data is sent to external services.
-- **Vendor Agnostic**: Works with any ticketing system via adapters. Not locked into ServiceNow or Jira.
-- **Extensible**: Write custom adapters, processors, or output plugins in Python with a simple interface.
-- **Production Ready**: Docker support, health checks, graceful shutdown, structured logging, and comprehensive error handling.
-- **Well Documented**: Every endpoint, CLI command, configuration option, and extension point is documented.
+- **Zero Cost Analytics**: No paid APIs, no cloud dependencies, no per-seat licensing. Everything runs locally or on your own infrastructure for ticket analytics.
+- **Privacy First**: Your ticket data never leaves your environment. No data is sent to external services in IT support analytics.
+- **Vendor Agnostic**: Works with any ticketing system via adapters including ServiceNow, Jira, Zendesk, CSV files, REST APIs. Not locked into specific platforms.
+- **Extensible**: Write custom adapters, processors, or output plugins in Python with a simple interface for machine learning on tickets.
+- **Production Ready**: Docker support, health checks, graceful shutdown, structured logging, and comprehensive error handling for enterprise IT operations.
+- **Well Documented**: Every endpoint, CLI command, configuration option, and extension point is documented for NLP and ML applications.
+- **Advanced Features**: Includes sentiment analysis, duplicate detection, anomaly detection, root cause analysis, topic modeling, priority prediction, assignment recommendation, trend forecasting, and custom dashboards.
+
+**Perfect for:** IT operations, help desk teams, support analytics, incident management, ticket classification, NLP processing, machine learning models, Flask applications, Python projects, open source software.
 
 ---
 
@@ -1641,6 +1650,18 @@ documentation improvements, or a new adapter, we'd love to have your help.
 | **Dashboards** | Create new dashboard templates and widgets | Intermediate |
 
 For detailed contribution guidelines, see [docs/CONTRIBUTING.md](docs/CONTRIBUTING.md).
+
+---
+
+## Topics & Keywords
+
+**Technologies:** Python, Flask, spaCy, scikit-learn, NLTK, Gensim, Pandas, NumPy, SQLAlchemy, Redis, PostgreSQL, Docker, REST API, Machine Learning, Natural Language Processing.
+
+**Domains:** IT Support, Help Desk, Ticket Analytics, Incident Management, Service Desk, ITSM, IT Operations, Support Analytics, Ticket Classification, Sentiment Analysis, Duplicate Detection, Anomaly Detection, Root Cause Analysis, Topic Modeling, Priority Prediction, Assignment Recommendation, Trend Forecasting, Dashboard, Reporting, Webhooks, Alerts.
+
+**Platforms:** ServiceNow, Jira, Zendesk, CSV Import, REST API, Universal Adapter, Open Source, Zero Cost, Self-Hosted, On-Premise.
+
+**Use Cases:** IT ticket analysis, support team insights, help desk optimization, incident response, customer support analytics, operational intelligence, data visualization, automated reporting.
 
 ---
 
