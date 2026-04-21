@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TicketInsight Pro — Dashboard</title>
+    <style>
+        /* ========== CSS Reset & Variables ========== */
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --primary: #1a56db;
+            --primary-dark: #1e3a8a;
+            --primary-light: #3b82f6;
+            --accent: #06b6d4;
+            --success: #059669;
+            --warning: #d97706;
+            --danger: #dc2626;
+            --bg-body: #f1f5f9;
+            --bg-card: #ffffff;
+            --bg-sidebar: #0f172a;
+            --text-primary: #1e293b;
+            --text-secondary: #64748b;
+            --text-muted: #94a3b8;
+            --border: #e2e8f0;
+            --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+            --shadow-lg: 0 4px 12px rgba(0,0,0,0.08);
+            --radius: 10px;
+            --sidebar-width: 260px;
+            --header-height: 60px;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+
+        /* ========== Layout ========== */
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* ========== Sidebar ========== */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: var(--bg-sidebar);
+            color: #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 100;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            padding: 20px 24px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar-brand .logo {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 16px;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .sidebar-brand h1 {
+            font-size: 15px;
+            font-weight: 700;
+            color: #f1f5f9;
+            letter-spacing: -0.3px;
+            line-height: 1.2;
+        }
+
+        .sidebar-brand .version {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .sidebar-nav {
+            padding: 16px 12px;
+            flex: 1;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-section-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            padding: 0 12px 8px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 13.5px;
+            text-decoration: none;
+            color: #94a3b8;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: #e2e8f0;
+        }
+
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+
+        .nav-icon {
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .sidebar-footer {
+            padding: 16px 20px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        /* ========== Main Content ========== */
+        .main {
+            flex: 1;
+            margin-left: var(--sidebar-width);
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ========== Header ========== */
+        .header {
+            height: var(--header-height);
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-left h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+            padding: 5px 12px;
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            border-radius: 20px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .api-link {
+            font-size: 12px;
+            color: var(--primary);
+            text-decoration: none;
+            padding: 6px 14px;
+            border: 1px solid var(--primary);
+            border-radius: 6px;
+            font-weight: 500;
+            transition: all 0.15s ease;
+        }
+
+        .api-link:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* ========== Content ========== */
+        .content {
+            padding: 24px 28px;
+            flex: 1;
+        }
+
+        /* ========== KPI Cards ========== */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kpi-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            transition: box-shadow 0.2s ease, transform 0.15s ease;
+        }
+
+        .kpi-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+        }
+
+        .kpi-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+
+        .kpi-card.blue::after { background: var(--primary); }
+        .kpi-card.green::after { background: var(--success); }
+        .kpi-card.yellow::after { background: var(--warning); }
+        .kpi-card.red::after { background: var(--danger); }
+        .kpi-card.cyan::after { background: var(--accent); }
+
+        .kpi-card .kpi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-bottom: 12px;
+        }
+
+        .kpi-card.blue .kpi-icon { background: #eff6ff; }
+        .kpi-card.green .kpi-icon { background: #ecfdf5; }
+        .kpi-card.yellow .kpi-icon { background: #fffbeb; }
+        .kpi-card.red .kpi-icon { background: #fef2f2; }
+        .kpi-card.cyan .kpi-icon { background: #ecfeff; }
+
+        .kpi-card .kpi-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .kpi-card .kpi-label {
+            font-size: 12.5px;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .kpi-card .kpi-change {
+            font-size: 11px;
+            margin-top: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .kpi-change.up { color: var(--success); }
+        .kpi-change.down { color: var(--danger); }
+
+        /* ========== Charts Area ========== */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .chart-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+        }
+
+        .chart-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .chart-card h3 .chart-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .chart-btn {
+            font-size: 11px;
+            padding: 3px 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            background: white;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .chart-btn:hover, .chart-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .chart-placeholder {
+            height: 240px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 13px;
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            background: #f8fafc;
+        }
+
+        .chart-placeholder .placeholder-icon {
+            font-size: 32px;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+
+        .chart-placeholder .placeholder-text {
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .chart-placeholder .placeholder-sub {
+            font-size: 11px;
+        }
+
+        /* ========== Data Tables ========== */
+        .table-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .table-card h3 {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .table-card h3 .table-count {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table thead th {
+            text-align: left;
+            padding: 10px 14px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            background: #f8fafc;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .data-table tbody td {
+            padding: 12px 14px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8fafc;
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            letter-spacing: 0.2px;
+        }
+
+        .badge-critical { background: #fecaca; color: #991b1b; }
+        .badge-high { background: #fed7aa; color: #9a3412; }
+        .badge-medium { background: #fef08a; color: #854d0e; }
+        .badge-low { background: #bbf7d0; color: #166534; }
+
+        .badge-open { background: #dbeafe; color: #1e40af; }
+        .badge-in-progress { background: #fef3c7; color: #92400e; }
+        .badge-resolved { background: #d1fae5; color: #065f46; }
+        .badge-closed { background: #e5e7eb; color: #374151; }
+        .badge-on-hold { background: #f3e8ff; color: #6b21a8; }
+
+        .ticket-id {
+            font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+            font-size: 12px;
+            color: var(--primary);
+            font-weight: 500;
+        }
+
+        .sentiment-bar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .sentiment-track {
+            width: 60px;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .sentiment-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .sentiment-fill.positive { background: var(--success); }
+        .sentiment-fill.neutral { background: var(--warning); }
+        .sentiment-fill.negative { background: var(--danger); }
+
+        /* ========== Quick Actions ========== */
+        .actions-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        .action-card {
+            background: var(--bg-card);
+            border-radius: var(--radius);
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .action-card:hover {
+            box-shadow: var(--shadow-lg);
+            transform: translateY(-2px);
+            border-color: var(--primary-light);
+        }
+
+        .action-card .action-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            margin: 0 auto 12px;
+        }
+
+        .action-card .action-title {
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .action-card .action-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        /* ========== Insight Items ========== */
+        .insight-list {
+            list-style: none;
+        }
+
+        .insight-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 13px;
+        }
+
+        .insight-item:last-child {
+            border-bottom: none;
+        }
+
+        .insight-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            margin-top: 5px;
+        }
+
+        .insight-dot.critical { background: var(--danger); }
+        .insight-dot.warning { background: var(--warning); }
+        .insight-dot.info { background: var(--primary); }
+        .insight-dot.success { background: var(--success); }
+
+        .insight-text {
+            color: var(--text-primary);
+        }
+
+        .insight-text .insight-time {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: block;
+            margin-top: 2px;
+        }
+
+        /* ========== Bottom Grid ========== */
+        .bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        /* ========== Section Title ========== */
+        .section-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* ========== Loading skeleton ========== */
+        .skeleton {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* ========== Responsive ========== */
+        @media (max-width: 1280px) {
+            .kpi-grid { grid-template-columns: repeat(3, 1fr); }
+            .actions-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 1024px) {
+            .charts-grid { grid-template-columns: 1fr; }
+            .bottom-grid { grid-template-columns: 1fr; }
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        @media (max-width: 768px) {
+            .sidebar { display: none; }
+            .main { margin-left: 0; }
+            .kpi-grid { grid-template-columns: 1fr; }
+            .actions-grid { grid-template-columns: 1fr; }
+        }
+
+        /* ========== Footer ========== */
+        .footer {
+            padding: 16px 28px;
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-muted);
+            border-top: 1px solid var(--border);
+            background: var(--bg-card);
+        }
+
+        .footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <!-- ========== Sidebar ========== -->
+        <aside class="sidebar">
+            <div class="sidebar-brand">
+                <div class="logo">TI</div>
+                <div>
+                    <h1>TicketInsight<br>Pro</h1>
+                    <div class="version">v1.0.0</div>
+                </div>
+            </div>
+
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-label">Main</div>
+                    <a href="/" class="nav-item active">
+                        <span class="nav-icon">&#9632;</span>
+                        Dashboard
+                    </a>
+                    <a href="/api/v1/tickets" class="nav-item" target="_blank">
+                        <span class="nav-icon">&#9776;</span>
+                        All Tickets
+                    </a>
+                    <a href="/api/v1/insights/summary" class="nav-item" target="_blank">
+                        <span class="nav-icon">&#9733;</span>
+                        Insights
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-label">Analytics</div>
+                    <a href="/api/v1/insights/sentiment" class="nav-item" target="_blank">
+                        <span class="nav-icon">&#9786;</span>
+                        Sentiment
+                    </a>
+                    <a href="/api/v1/insights/topics" class="nav-item" target="_blank">
+                        <span class="nav-icon">&#9672;</span>
+                        Topics
+                    </a>
+                    <a href="/api/v1/insights/duplicates" class="nav-item" target="_blank">
+                        <span class="nav-icon">&#10697;</span>
+                        Duplicates
+                    </a>
+                    <a href="/api/v1/insights/anomalies" class="nav-item" target="_blank">
+                        <span class="nav-icon">&#9888;</span>
+                        Anomalies
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-label">Operations</div>
+                    <a href="/api/v1/insights/performance" class="nav-item" target="_blank">
+                        <span class="nav-icon">&#9881;</span>
+                        Performance
+                    </a>
+                    <a href="/api/v1/insights/root-causes" class="nav-item" target="_blank">
+                        <span class="nav-icon">&#9737;</span>
+                        Root Causes
+                    </a>
+                    <a href="/api/v1/dashboard/trends" class="nav-item" target="_blank">
+                        <span class="nav-icon">&#8593;</span>
+                        Trends
+                    </a>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-label">System</div>
+                    <a href="/api/v1/pipeline/status" class="nav-item" target="_blank">
+                        <span class="nav-icon">&#9654;</span>
+                        Pipeline
+                    </a>
+                    <a href="/api/v1/adapter/status" class="nav-item" target="_blank">
+                        <span class="nav-icon">&#8638;</span>
+                        Adapters
+                    </a>
+                    <a href="/api/v1/config" class="nav-item" target="_blank">
+                        <span class="nav-icon">&#9881;</span>
+                        Config
+                    </a>
+                    <a href="/api/v1/health" class="nav-item" target="_blank">
+                        <span class="nav-icon">&#10003;</span>
+                        Health
+                    </a>
+                </div>
+            </nav>
+
+            <div class="sidebar-footer">
+                TicketInsight Pro &mdash; MIT License<br>
+                Open Source Analytics Platform
+            </div>
+        </aside>
+
+        <!-- ========== Main Content ========== -->
+        <div class="main">
+            <!-- Header -->
+            <header class="header">
+                <div class="header-left">
+                    <h2>Dashboard</h2>
+                </div>
+                <div class="header-right">
+                    <div class="status-indicator">
+                        <span class="status-dot"></span>
+                        API Online
+                    </div>
+                    <a href="/api/v1/health" class="api-link" target="_blank">
+                        API Docs &rarr;
+                    </a>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="content">
+                <!-- KPI Cards -->
+                <div class="kpi-grid" id="kpi-grid">
+                    <div class="kpi-card blue">
+                        <div class="kpi-icon">&#128203;</div>
+                        <div class="kpi-value" id="kpi-total">--</div>
+                        <div class="kpi-label">Total Tickets</div>
+                        <div class="kpi-change up" id="kpi-total-change"></div>
+                    </div>
+                    <div class="kpi-card cyan">
+                        <div class="kpi-icon">&#128994;</div>
+                        <div class="kpi-value" id="kpi-open">--</div>
+                        <div class="kpi-label">Open Tickets</div>
+                        <div class="kpi-change" id="kpi-open-change"></div>
+                    </div>
+                    <div class="kpi-card green">
+                        <div class="kpi-icon">&#9201;</div>
+                        <div class="kpi-value" id="kpi-resolution">--</div>
+                        <div class="kpi-label">Avg Resolution (hrs)</div>
+                        <div class="kpi-change" id="kpi-resolution-change"></div>
+                    </div>
+                    <div class="kpi-card yellow">
+                        <div class="kpi-icon">&#9786;</div>
+                        <div class="kpi-value" id="kpi-sentiment">--</div>
+                        <div class="kpi-label">Avg Sentiment</div>
+                        <div class="kpi-change" id="kpi-sentiment-change"></div>
+                    </div>
+                    <div class="kpi-card red">
+                        <div class="kpi-icon">&#9888;</div>
+                        <div class="kpi-value" id="kpi-anomalies">--</div>
+                        <div class="kpi-label">Anomalies Detected</div>
+                        <div class="kpi-change" id="kpi-anomaly-change"></div>
+                    </div>
+                </div>
+
+                <!-- Charts Area -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <h3>
+                            Ticket Volume Trend
+                            <div class="chart-actions">
+                                <button class="chart-btn active" onclick="setTrendPeriod('daily')">7D</button>
+                                <button class="chart-btn" onclick="setTrendPeriod('weekly')">4W</button>
+                                <button class="chart-btn" onclick="setTrendPeriod('monthly')">6M</button>
+                            </div>
+                        </h3>
+                        <div class="chart-placeholder" id="chart-volume" data-chart="volume">
+                            <div class="placeholder-icon">&#128200;</div>
+                            <div class="placeholder-text">Ticket Volume Chart</div>
+                            <div class="placeholder-sub">Data will be loaded from the API</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3>
+                            Category Distribution
+                            <div class="chart-actions">
+                                <button class="chart-btn active">Chart</button>
+                                <button class="chart-btn">Table</button>
+                            </div>
+                        </h3>
+                        <div class="chart-placeholder" id="chart-categories" data-chart="categories">
+                            <div class="placeholder-icon">&#128202;</div>
+                            <div class="placeholder-text">Category Breakdown</div>
+                            <div class="placeholder-sub">Data will be loaded from the API</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Grid: Sentiment Trend + Distribution -->
+                <div class="bottom-grid">
+                    <div class="chart-card">
+                        <h3>Sentiment Trend</h3>
+                        <div class="chart-placeholder" id="chart-sentiment" data-chart="sentiment">
+                            <div class="placeholder-icon">&#128154;</div>
+                            <div class="placeholder-text">Sentiment Over Time</div>
+                            <div class="placeholder-sub">Requires NLP analysis to be run</div>
+                        </div>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3>Priority Distribution</h3>
+                        <div class="chart-placeholder" id="chart-priority" data-chart="priority">
+                            <div class="placeholder-icon">&#128197;</div>
+                            <div class="placeholder-text">Priority Breakdown</div>
+                            <div class="placeholder-sub">Data will be loaded from the API</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Tickets Table -->
+                <div class="table-card">
+                    <h3>
+                        Recent Tickets
+                        <span class="table-count" id="ticket-count">Loading...</span>
+                    </h3>
+                    <table class="data-table" id="tickets-table">
+                        <thead>
+                            <tr>
+                                <th>Ticket ID</th>
+                                <th>Title</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Category</th>
+                                <th>Assigned To</th>
+                                <th>Sentiment</th>
+                                <th>Opened</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tickets-tbody">
+                            <tr>
+                                <td colspan="8" style="text-align:center; padding:40px; color: var(--text-muted);">
+                                    <div class="skeleton" style="width:200px;height:16px;margin:0 auto 8px;"></div>
+                                    <div class="skeleton" style="width:300px;height:12px;margin:0 auto;"></div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="section-title">Quick Actions</div>
+                <div class="actions-grid">
+                    <a class="action-card" href="/api/v1/ingest" target="_blank" style="border-left: 3px solid var(--primary);">
+                        <div class="action-icon" style="background:#eff6ff;">&#8638;</div>
+                        <div class="action-title">Ingest Data</div>
+                        <div class="action-desc">Import tickets from ServiceNow, Jira, or CSV</div>
+                    </a>
+                    <a class="action-card" href="/api/v1/analyze" target="_blank" style="border-left: 3px solid var(--accent);">
+                        <div class="action-icon" style="background:#ecfeff;">&#9881;</div>
+                        <div class="action-title">Run Analysis</div>
+                        <div class="action-desc">Trigger NLP classification, sentiment, and topic analysis</div>
+                    </a>
+                    <a class="action-card" id="action-report" style="border-left: 3px solid var(--success);">
+                        <div class="action-icon" style="background:#ecfdf5;">&#128196;</div>
+                        <div class="action-title">Generate Report</div>
+                        <div class="action-desc">Create executive summary or detailed analysis report</div>
+                    </a>
+                    <a class="action-card" href="/api/v1/pipeline/run" target="_blank" style="border-left: 3px solid var(--warning);"
+                       onclick="event.preventDefault(); runPipeline();">
+                        <div class="action-icon" style="background:#fffbeb;">&#9654;</div>
+                        <div class="action-title">Run Pipeline</div>
+                        <div class="action-desc">Execute the full ingest-analyze pipeline now</div>
+                    </a>
+                </div>
+
+                <!-- Alerts / Insights Feed -->
+                <div class="bottom-grid" style="margin-top: 24px;">
+                    <div class="chart-card">
+                        <h3>&#128680; Active Alerts</h3>
+                        <ul class="insight-list" id="alerts-list">
+                            <li class="insight-item">
+                                <span class="insight-dot info"></span>
+                                <span class="insight-text">
+                                    System initialised. Run analysis to generate insights.
+                                    <span class="insight-time">Just now</span>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="chart-card">
+                        <h3>&#128161; Recommendations</h3>
+                        <ul class="insight-list" id="recommendations-list">
+                            <li class="insight-item">
+                                <span class="insight-dot info"></span>
+                                <span class="insight-text">
+                                    Run NLP analysis to discover knowledge article opportunities.
+                                    <span class="insight-time">Analysis required</span>
+                                </span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <footer class="footer">
+                TicketInsight Pro v1.0.0 &mdash; Open Source Ticket Analytics Platform |
+                <a href="https://github.com/ticketinsight/ticketinsight-pro">GitHub</a> |
+                <a href="/api/v1/health">API Health</a>
+            </footer>
+        </div>
+    </div>
+
+    <!-- ========== JavaScript ========== -->
+    <script>
+        // ---- Configuration ----
+        const API_BASE = '/api/v1';
+
+        // ---- Dashboard data loading ----
+        async function loadDashboard() {
+            try {
+                const response = await fetch(API_BASE + '/dashboard/statistics');
+                if (!response.ok) throw new Error('API error: ' + response.status);
+                const data = await response.json();
+
+                updateKPIs(data.statistics || {});
+                updateTicketsTable(data.recent_tickets || []);
+                updateAlerts(data.statistics || {});
+            } catch (error) {
+                console.error('Failed to load dashboard data:', error);
+                document.getElementById('tickets-tbody').innerHTML =
+                    '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--danger);">' +
+                    'Failed to load data. Is the server running?<br>' +
+                    '<small>' + error.message + '</small></td></tr>';
+            }
+        }
+
+        function updateKPIs(stats) {
+            const total = stats.total_tickets || 0;
+            const open = (stats.by_status?.Open || 0) + (stats.by_status?.['In Progress'] || 0);
+            const avgRes = stats.avg_resolution_time_hours;
+            const avgSent = stats.avg_sentiment_score || 0;
+            const anomalies = stats.anomaly_count || 0;
+
+            document.getElementById('kpi-total').textContent = total.toLocaleString();
+            document.getElementById('kpi-open').textContent = open.toLocaleString();
+            document.getElementById('kpi-resolution').textContent = avgRes != null ? avgRes.toFixed(1) : 'N/A';
+            document.getElementById('kpi-sentiment').textContent = avgSent.toFixed(2);
+            document.getElementById('kpi-anomalies').textContent = anomalies;
+
+            // Today's changes
+            const openedToday = stats.opened_today || 0;
+            const resolvedToday = stats.resolved_today || 0;
+
+            if (openedToday > 0) {
+                document.getElementById('kpi-total-change').className = 'kpi-change up';
+                document.getElementById('kpi-total-change').textContent = '+' + openedToday + ' today';
+            }
+            if (resolvedToday > 0) {
+                document.getElementById('kpi-resolution-change').className = 'kpi-change up';
+                document.getElementById('kpi-resolution-change').textContent = '+' + resolvedToday + ' resolved today';
+            }
+        }
+
+        function updateTicketsTable(tickets) {
+            const tbody = document.getElementById('tickets-tbody');
+            document.getElementById('ticket-count').textContent = tickets.length + ' recent tickets';
+
+            if (!tickets.length) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-muted);">' +
+                    'No tickets found. Run data ingestion to populate the dashboard.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = tickets.map(t => {
+                const priorityClass = {
+                    'Critical': 'badge-critical', 'High': 'badge-high',
+                    'Medium': 'badge-medium', 'Low': 'badge-low'
+                }[t.priority] || 'badge-medium';
+
+                const statusClass = {
+                    'Open': 'badge-open', 'In Progress': 'badge-in-progress',
+                    'Resolved': 'badge-resolved', 'Closed': 'badge-closed', 'On Hold': 'badge-on-hold'
+                }[t.status] || 'badge-open';
+
+                const sentLabel = t.sentiment_label || 'Neutral';
+                const sentScore = t.sentiment_score || 0;
+                const sentWidth = Math.min(100, Math.max(5, (sentScore + 1) * 50));
+                const sentClass = sentLabel === 'Positive' ? 'positive' : sentLabel === 'Negative' ? 'negative' : 'neutral';
+
+                const openedAt = t.opened_at ? new Date(t.opened_at).toLocaleDateString() : '--';
+                const title = (t.title || '').length > 50 ? (t.title || '').substring(0, 50) + '...' : (t.title || '');
+
+                return '<tr>' +
+                    '<td><span class="ticket-id">' + escapeHtml(t.ticket_id || '--') + '</span></td>' +
+                    '<td>' + escapeHtml(title) + '</td>' +
+                    '<td><span class="badge ' + priorityClass + '">' + escapeHtml(t.priority || '--') + '</span></td>' +
+                    '<td><span class="badge ' + statusClass + '">' + escapeHtml(t.status || '--') + '</span></td>' +
+                    '<td>' + escapeHtml(t.category || '--') + '</td>' +
+                    '<td>' + escapeHtml(t.assignee || t.assignment_group || 'Unassigned') + '</td>' +
+                    '<td><div class="sentiment-bar">' +
+                        '<div class="sentiment-track"><div class="sentiment-fill ' + sentClass + '" style="width:' + sentWidth + '%"></div></div>' +
+                        '<small>' + sentScore.toFixed(1) + '</small></div></td>' +
+                    '<td style="white-space:nowrap;">' + openedAt + '</td>' +
+                    '</tr>';
+            }).join('');
+        }
+
+        function updateAlerts(stats) {
+            const alertsList = document.getElementById('alerts-list');
+            const alerts = [];
+
+            const critical = stats.by_priority?.Critical || 0;
+            const high = stats.by_priority?.High || 0;
+            if (critical > 0) alerts.push({ level: 'critical', text: critical + ' Critical ticket(s) require immediate attention' });
+            if (high > 0) alerts.push({ level: 'warning', text: high + ' High priority ticket(s) in system' });
+
+            const anomalies = stats.anomaly_count || 0;
+            if (anomalies > 0) alerts.push({ level: 'warning', text: anomalies + ' anomalous ticket(s) detected' });
+
+            const dups = stats.duplicate_count || 0;
+            if (dups > 0) alerts.push({ level: 'info', text: dups + ' duplicate ticket(s) found — consider KA articles' });
+
+            if (alerts.length === 0) {
+                alerts.push({ level: 'success', text: 'No active alerts. System operating normally.' });
+            }
+
+            alertsList.innerHTML = alerts.map(a =>
+                '<li class="insight-item"><span class="insight-dot ' + a.level + '"></span>' +
+                '<span class="insight-text">' + a.text + '</span></li>'
+            ).join('');
+        }
+
+        // ---- Pipeline trigger ----
+        async function runPipeline() {
+            try {
+                const response = await fetch(API_BASE + '/pipeline/run', { method: 'POST' });
+                const data = await response.json();
+                if (response.status === 202) {
+                    alert('Pipeline run started! Task ID: ' + data.task_id);
+                } else {
+                    alert('Pipeline run: ' + (data.message || JSON.stringify(data)));
+                }
+            } catch (error) {
+                alert('Failed to trigger pipeline: ' + error.message);
+            }
+        }
+
+        // ---- Report generation ----
+        document.getElementById('action-report')?.addEventListener('click', async function(e) {
+            e.preventDefault();
+            try {
+                const response = await fetch(API_BASE + '/insights/summary');
+                const data = await response.json();
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'ticketinsight-report-' + new Date().toISOString().slice(0, 10) + '.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (error) {
+                alert('Failed to generate report: ' + error.message);
+            }
+        });
+
+        // ---- Utility ----
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function setTrendPeriod(period) {
+            document.querySelectorAll('.chart-card:first-child .chart-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            // In production, this would reload chart data with the new period
+        }
+
+        // ---- Auto-refresh ----
+        loadDashboard();
+        setInterval(loadDashboard, 300000); // Refresh every 5 minutes
+    </script>
+</body>
+</html>

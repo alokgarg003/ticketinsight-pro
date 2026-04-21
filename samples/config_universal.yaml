@@ -1,0 +1,392 @@
+# =============================================================================
+# TicketInsight Pro - Universal / REST API Adapter Configuration
+# =============================================================================
+#
+# This configuration file defines how TicketInsight Pro connects to ANY
+# REST API that returns ticket data in JSON format. All behaviour — endpoint
+# URLs, authentication, field mapping, pagination, and response structure —
+# is controlled through this configuration.
+#
+# Use this adapter when:
+#   - You have a custom ticketing system with a REST API
+#   - You use a system not natively supported (e.g., Zendesk, Freshdesk,
+#     ManageEngine, Autotask, ConnectWise, Halp, etc.)
+#   - You have an internal API that aggregates data from multiple systems
+#   - You want to pull tickets from a generic data source
+#
+# Quick start:
+#   1. Copy this file to your project root as config.yaml
+#   2. Fill in base_url and endpoint for your API
+#   3. Configure authentication (auth_type and auth_credentials)
+#   4. Set field_mapping to map API fields to TicketInsight format
+#   5. Configure pagination (pagination_type and pagination_params)
+#   6. Run: ticketinsight sync --config config.yaml
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Adapter type
+# ---------------------------------------------------------------------------
+adapter:
+  type: universal                      # Must be "universal" for this template
+
+  # -----------------------------------------------------------------------
+  # Universal / REST API settings
+  # -----------------------------------------------------------------------
+  universal:
+    # Base URL of the API.
+    # This is the root URL used for health checks and URL resolution.
+    # The full endpoint URL is built by joining base_url + endpoint.
+    base_url: "https://api.example.com/v1"
+
+    # API endpoint path for ticket retrieval.
+    # Can be a relative path (joined with base_url) or an absolute URL.
+    # For single-ticket fetch, the adapter appends /{ticket_id} to this path.
+    endpoint: "/tickets"
+
+    # -------------------------------------------------------------------
+    # Authentication
+    # -------------------------------------------------------------------
+    # Supported authentication types:
+    #   none             : No authentication (public API)
+    #   basic            : HTTP Basic Auth (username + password)
+    #   bearer           : OAuth 2.0 Bearer Token in Authorization header
+    #   api_key_header   : API key in a custom HTTP header
+    #   api_key_query    : API key as a query string parameter
+    #   oauth2           : Full OAuth 2.0 authorization code flow
+
+    auth_type: "bearer"
+
+    # Authentication credentials.
+    # The fields used depend on auth_type:
+    #
+    # For "basic":
+    #   username: "your-username"
+    #   password: "your-password"
+    #
+    # For "bearer":
+    #   token: "your-bearer-token"
+    #
+    # For "api_key_header":
+    #   header_name: "X-API-Key"      # Custom header name (default: X-API-Key)
+    #   key: "your-api-key"
+    #
+    # For "api_key_query":
+    #   param_name: "api_key"         # Query parameter name (default: api_key)
+    #   key: "your-api-key"
+    #
+    # For "oauth2":
+    #   token_url: "https://auth.example.com/oauth/token"
+    #   client_id: "your-client-id"
+    #   client_secret: "your-client-secret"
+    #   scope: "read tickets"
+    #   audience: "https://api.example.com"
+
+    auth_credentials:
+      token: ""                        # Replace with your API token
+
+    # -------------------------------------------------------------------
+    # Field mapping
+    # -------------------------------------------------------------------
+    # Maps canonical TicketInsight field names to JSON dot-path expressions
+    # in the API response. Each value is a path into the JSON response
+    # structure, using dot notation for nested objects and integer indices
+    # for array access.
+    #
+    # Canonical fields you can map:
+    #   ticket_id        : Unique ticket identifier
+    #   title            : Short title/summary
+    #   description      : Full description/body
+    #   priority         : Critical, High, Medium, Low
+    #   status           : Open, In Progress, On Hold, Resolved, Closed
+    #   category         : Category or issue type
+    #   assignment_group : Support team or group
+    #   assignee         : Assigned person
+    #   opened_at        : Creation timestamp
+    #   resolved_at      : Resolution timestamp
+    #   closed_at        : Closure timestamp
+    #   updated_at       : Last update timestamp
+    #   source_system    : Source system name (auto-set to "universal")
+    #   affected_service : Related service or CI
+    #   caller           : Person who created the ticket
+    #
+    # Dot-path examples:
+    #   "id"                          → top-level "id" field
+    #   "attributes.subject"          → nested: {"attributes": {"subject": "..."}}
+    #   "data.title"                  → nested: {"data": {"title": "..."}}
+    #   "fields.priority.value"       → deeply nested
+    #   "creator.name"                → nested object
+    #   "comments.0.body"             → first element of comments array
+    #   "labels.0"                    → first label
+    #
+    # If a field mapping is not provided, the adapter falls back to
+    # automatic alias matching (see base.py _FIELD_ALIASES).
+
+    field_mapping: {}
+
+    # -------------------------------------------------------------------
+    # Response structure
+    # -------------------------------------------------------------------
+    # Specifies where to find the ticket items array in the API response.
+    # This is a dot-path expression pointing to the array of ticket objects.
+    #
+    # Common patterns:
+    #   "results"              : {"results": [...]}
+    #   "data"                 : {"data": [...]}
+    #   "data.items"           : {"data": {"items": [...]}}
+    #   "data.tickets"         : {"data": {"tickets": [...]}}
+    #   "issues"               : {"issues": [...]}
+    #   "value"                : {"value": [...]}
+    #   "tickets"              : {"tickets": [...]}
+    #   ""                     : Response is directly an array
+    response_items_path: "data"
+
+    # Dot-path to the total count field in the API response.
+    # Used to determine if there are more pages of results.
+    # Set to "" or omit if the API does not return a total count
+    # (the adapter will stop when it receives an empty page).
+    response_total_path: "meta.total_count"
+
+    # -------------------------------------------------------------------
+    # Pagination configuration
+    # -------------------------------------------------------------------
+    # Supported pagination types:
+    #   offset   : Offset-based (limit + offset params)
+    #   page     : Page-based (page + per_page params)
+    #   cursor   : Cursor-based (cursor/continuation token)
+
+    pagination_type: "offset"
+
+    # Parameter names used for pagination.
+    # Customize these to match your API's query parameter naming.
+    pagination_params:
+      # For "offset" pagination:
+      limit_key: "limit"             # e.g., "?limit=100"
+      offset_key: "offset"           # e.g., "?offset=0"
+
+      # For "page" pagination:
+      # per_page_key: "per_page"      # e.g., "?per_page=100"
+      # page_key: "page"              # e.g., "?page=1"
+
+      # For "cursor" pagination:
+      # cursor_key: "cursor"          # e.g., "?cursor=abc123"
+      # limit_key: "limit"            # Also used with cursor
+
+    # -------------------------------------------------------------------
+    # Cursor extraction (cursor-based pagination)
+    # -------------------------------------------------------------------
+    # When using cursor-based pagination, the adapter looks for the
+    # next cursor in these locations (in order of precedence):
+    #   1. response.next_cursor
+    #   2. response.next_page_token
+    #   3. response.next
+    #   4. response.cursor
+    #   5. response.pagination.next_cursor
+    #   6. response.links.next (string)
+    #   7. response._links.next.href (HATEOAS)
+    #
+    # If your API uses a different field name, specify it here:
+    # custom_cursor_path: "meta.pagination.next_token"
+
+    # -------------------------------------------------------------------
+    # Default query parameters
+    # -------------------------------------------------------------------
+    # Additional query parameters sent with every request.
+    # Useful for API-specific filters, sorting, or expansions.
+    default_params:
+      # status: "open"
+      # sort: "-created_at"
+      # include: "assignee,comments"
+      # expand: "true"
+
+    # -------------------------------------------------------------------
+    # Custom HTTP headers
+    # -------------------------------------------------------------------
+    # Extra HTTP headers sent with every request.
+    # The adapter already sets Accept: application/json and
+    # Content-Type: application/json by default.
+    headers:
+      # X-Custom-Header: "value"
+      # Accept-Version: "v2"
+
+    # -------------------------------------------------------------------
+    # Date field configuration
+    # -------------------------------------------------------------------
+    # List of field names (in the mapped/flattened output) that contain
+    # dates. This ensures proper date parsing and formatting.
+    date_fields:
+      - "opened_at"
+      - "resolved_at"
+      - "closed_at"
+      - "updated_at"
+
+    # Expected date format for parsing date fields.
+    # Uses Python strftime format codes.
+    # If not set, the adapter tries multiple common formats.
+    # Examples:
+    #   "%Y-%m-%dT%H:%M:%S%z"     : ISO 8601 with timezone
+    #   "%Y-%m-%dT%H:%M:%SZ"     : ISO 8601 UTC
+    #   "%Y-%m-%dT%H:%M:%S"      : ISO 8601 without timezone
+    #   "%Y-%m-%d %H:%M:%S"      : Common datetime
+    #   "%Y-%m-%d"                : Date only
+    #   "%s"                      : Unix timestamp (seconds)
+    #   "%s%3d"                   : Unix timestamp (milliseconds)
+    date_format: ""
+
+    # -------------------------------------------------------------------
+    # Request settings
+    # -------------------------------------------------------------------
+
+    # HTTP request method for the list endpoint.
+    # Most APIs use GET, but some require POST.
+    # method: "GET"
+    # For POST-based search APIs, put the query in the request body:
+    # post_query_field: "query"
+
+    # Number of records per page.
+    batch_size: 100
+
+    # HTTP request timeout in seconds.
+    timeout: 60
+
+    # Retry attempts for transient failures.
+    retry_attempts: 3
+
+    # Base delay in seconds between retries (exponential backoff).
+    retry_delay: 5.0
+
+    # -------------------------------------------------------------------
+    # HTTP method configuration
+    # -------------------------------------------------------------------
+    # Some APIs use POST with a JSON body for searching/filtering.
+    # If your API requires POST for listing tickets, configure these:
+    #
+    # method: "POST"
+    #
+    # Template for the POST request body.
+    # Use {{field}} placeholders that will be replaced with actual values:
+    #   {{query}}     - Search query string
+    #   {{limit}}     - Page size (from batch_size)
+    #   {{offset}}    - Offset for offset-based pagination
+    #   {{page}}      - Page number for page-based pagination
+    #   {{cursor}}    - Cursor for cursor-based pagination
+    #
+    # post_body_template: |
+    #   {
+    #     "search": "{{query}}",
+    #     "pageSize": {{limit}},
+    #     "offset": {{offset}}
+    #   }
+
+# ---------------------------------------------------------------------------
+# Pipeline settings
+# ---------------------------------------------------------------------------
+pipeline:
+  interval_minutes: 30
+  ticket_limit_per_run: 1000
+  enable_sentiment: true
+  enable_classification: true
+  enable_topic_modeling: true
+  enable_duplicate_detection: true
+  enable_anomaly_detection: true
+  enable_summarization: true
+  enable_ner: true
+  enable_root_cause: true
+
+# ---------------------------------------------------------------------------
+# NLP settings
+# ---------------------------------------------------------------------------
+nlp:
+  model: "en_core_web_sm"
+  min_confidence: 0.6
+  duplicate_threshold: 0.92
+  max_text_length: 10000
+
+# ---------------------------------------------------------------------------
+# Database settings
+# ---------------------------------------------------------------------------
+database:
+  url: "sqlite:///data/ticketinsight.db"
+  pool_size: 10
+
+# ---------------------------------------------------------------------------
+# Logging settings
+# ---------------------------------------------------------------------------
+logging:
+  level: "INFO"
+  file: "logs/ticketinsight.log"
+  console_enabled: true
+
+# ---------------------------------------------------------------------------
+# Environment variable overrides
+# ---------------------------------------------------------------------------
+# UNIVERSAL_BASE_URL   → adapter.universal.base_url
+# UNIVERSAL_TOKEN      → adapter.universal.auth_credentials.token
+# DATABASE_URL         → database.url
+# LOG_LEVEL            → logging.level
+# =============================================================================
+
+# =============================================================================
+# EXAMPLES FOR COMMON SYSTEMS
+# =============================================================================
+#
+# --- Zendesk API ---
+# adapter:
+#   type: universal
+#   universal:
+#     base_url: "https://yourcompany.zendesk.com/api/v2"
+#     endpoint: "/tickets.json"
+#     auth_type: "basic"
+#     auth_credentials:
+#       username: "your-email@example.com/token"
+#       password: "your-api-token"
+#     response_items_path: "tickets"
+#     pagination_type: "cursor"
+#     pagination_params:
+#       cursor_key: "page[start_after_cursor]"
+#       limit_key: "page[size]"
+#     batch_size: 100
+#
+# --- Freshdesk API ---
+# adapter:
+#   type: universal
+#   universal:
+#     base_url: "https://yourcompany.freshdesk.com/api/v2"
+#     endpoint: "/tickets"
+#     auth_type: "basic"
+#     auth_credentials:
+#       username: "your-api-key"
+#       password: "X"                    # Password is ignored, use API key as username
+#     response_items_path: ""             # Response is directly an array
+#     pagination_type: "page"
+#     pagination_params:
+#       page_key: "page"
+#       per_page_key: "per_page"
+#     batch_size: 100
+#
+# --- Custom Internal API ---
+# adapter:
+#   type: universal
+#   universal:
+#     base_url: "https://internal-api.company.com"
+#     endpoint: "/api/support/tickets"
+#     auth_type: "bearer"
+#     auth_credentials:
+#       token: "your-jwt-token"
+#     response_items_path: "data.items"
+#     response_total_path: "data.pagination.total"
+#     pagination_type: "offset"
+#     pagination_params:
+#       limit_key: "pageSize"
+#       offset_key: "skip"
+#     field_mapping:
+#       ticket_id: "id"
+#       title: "subject"
+#       description: "body"
+#       priority: "severity"
+#       status: "state"
+#       category: "type"
+#       assignment_group: "team.name"
+#       assignee: "owner.email"
+#       opened_at: "created_at"
+#       updated_at: "modified_at"
+# =============================================================================

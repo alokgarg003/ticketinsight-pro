@@ -1,0 +1,375 @@
+{
+  "_comment": [
+    "TicketInsight Pro - Universal Adapter Field Mapping Examples",
+    "",
+    "This JSON file demonstrates how to map fields from various external APIs",
+    "to the canonical TicketInsight schema. Each example shows a different ticket",
+    "system's API response structure and the corresponding field_mapping that",
+    "translates it into TicketInsight format.",
+    "",
+    "Usage:",
+    "  1. Copy the appropriate 'field_mapping' object into your config YAML",
+    "  2. Place it under adapter.universal.field_mapping",
+    "  3. Update 'response_items_path' to match your API's response structure",
+    "",
+    "Canonical TicketInsight fields:",
+    "  ticket_id, title, description, priority, status, category,",
+    "  assignment_group, assignee, opened_at, resolved_at, closed_at,",
+    "  updated_at, source_system, affected_service, caller"
+  ],
+
+  "examples": [
+    {
+      "system": "Generic REST API (simple flat structure)",
+      "description": "A simple API that returns ticket objects at the top level with straightforward field names.",
+      "sample_response": {
+        "data": [
+          {
+            "id": "TKT-001",
+            "subject": "Cannot login to email",
+            "body": "I am unable to login to my email since yesterday...",
+            "severity": "high",
+            "state": "in_progress",
+            "type": "email",
+            "team": "IT Support",
+            "agent": "John Smith",
+            "created_at": "2026-01-15T10:30:00Z",
+            "resolved_at": null,
+            "updated_at": "2026-01-16T14:00:00Z"
+          }
+        ],
+        "meta": { "total": 150 }
+      },
+      "config": {
+        "response_items_path": "data",
+        "response_total_path": "meta.total",
+        "pagination_type": "offset",
+        "pagination_params": {
+          "limit_key": "limit",
+          "offset_key": "offset"
+        },
+        "field_mapping": {
+          "ticket_id": "id",
+          "title": "subject",
+          "description": "body",
+          "priority": "severity",
+          "status": "state",
+          "category": "type",
+          "assignment_group": "team",
+          "assignee": "agent",
+          "opened_at": "created_at",
+          "resolved_at": "resolved_at",
+          "updated_at": "updated_at"
+        },
+        "priority_map": {
+          "critical": "Critical",
+          "high": "High",
+          "medium": "Medium",
+          "low": "Low"
+        },
+        "status_map": {
+          "new": "Open",
+          "in_progress": "In Progress",
+          "on_hold": "On Hold",
+          "resolved": "Resolved",
+          "closed": "Closed"
+        }
+      }
+    },
+
+    {
+      "system": "ServiceNow-style API (nested reference fields)",
+      "description": "ServiceNow returns reference fields as objects with display_value and link. The adapter handles flattening, but if using the universal adapter, you need dot-path mappings.",
+      "sample_response": {
+        "result": [
+          {
+            "number": "INC0012345",
+            "short_description": "VPN not connecting",
+            "description": "Cisco AnyConnect VPN fails to connect...",
+            "priority": "2",
+            "state": "2",
+            "category": "network",
+            "assignment_group": {
+              "display_value": "IT-Network-Ops",
+              "link": "https://dev12345.service-now.com/api/now/table/sys_user_group/abc123"
+            },
+            "assigned_to": {
+              "display_value": "Alex Petrov",
+              "link": "https://dev12345.service-now.com/api/now/table/sys_user/def456"
+            },
+            "cmdb_ci": {
+              "display_value": "VPN Gateway",
+              "link": "https://dev12345.service-now.com/api/now/table/cmdb_ci/ghi789"
+            },
+            "caller_id": {
+              "display_value": "Jane Doe",
+              "link": "https://dev12345.service-now.com/api/now/table/sys_user/jkl012"
+            },
+            "opened_at": "2026-02-10T08:30:00Z",
+            "resolved_at": "2026-02-12T15:00:00Z",
+            "closed_at": "2026-02-14T10:00:00Z",
+            "sys_updated_on": "2026-02-14T10:00:00Z"
+          }
+        ]
+      },
+      "config": {
+        "response_items_path": "result",
+        "pagination_type": "offset",
+        "pagination_params": {
+          "limit_key": "sysparm_limit",
+          "offset_key": "sysparm_offset"
+        },
+        "field_mapping": {
+          "ticket_id": "number",
+          "title": "short_description",
+          "description": "description",
+          "priority": "priority",
+          "status": "state",
+          "category": "category",
+          "assignment_group": "assignment_group.display_value",
+          "assignee": "assigned_to.display_value",
+          "affected_service": "cmdb_ci.display_value",
+          "caller": "caller_id.display_value",
+          "opened_at": "opened_at",
+          "resolved_at": "resolved_at",
+          "closed_at": "closed_at",
+          "updated_at": "sys_updated_on"
+        },
+        "priority_map": {
+          "1": "Critical",
+          "2": "High",
+          "3": "Medium",
+          "4": "Low"
+        },
+        "status_map": {
+          "1": "Open",
+          "2": "In Progress",
+          "3": "On Hold",
+          "5": "Resolved",
+          "6": "Closed"
+        }
+      }
+    },
+
+    {
+      "system": "Jira-style API (nested 'fields' object)",
+      "description": "Jira wraps issue data inside a 'fields' object and uses nested display-value objects for people, priorities, and statuses.",
+      "sample_response": {
+        "issues": [
+          {
+            "key": "ITOPS-123",
+            "id": "43210",
+            "fields": {
+              "summary": "Database connection timeout",
+              "description": {
+                "type": "doc",
+                "version": 1,
+                "content": [
+                  {
+                    "type": "paragraph",
+                    "content": [{ "type": "text", "text": "Getting connection timeout errors when..." }]
+                  }
+                ]
+              },
+              "status": { "name": "In Progress", "self": "..." },
+              "priority": { "name": "High", "id": "2" },
+              "issuetype": { "name": "Bug", "subtask": false },
+              "assignee": { "displayName": "Sarah Chen", "emailAddress": "s.chen@company.com" },
+              "reporter": { "displayName": "Bob Wilson", "emailAddress": "b.wilson@company.com" },
+              "created": "2026-03-01T09:00:00.000+0000",
+              "updated": "2026-03-05T14:30:00.000+0000",
+              "resolutiondate": null,
+              "project": { "key": "ITOPS", "name": "IT Operations" },
+              "labels": ["database", "timeout", "production"],
+              "components": [{ "name": "Backend Services" }]
+            }
+          }
+        ],
+        "total": 75
+      },
+      "config": {
+        "response_items_path": "issues",
+        "response_total_path": "total",
+        "pagination_type": "offset",
+        "pagination_params": {
+          "limit_key": "maxResults",
+          "offset_key": "startAt"
+        },
+        "field_mapping": {
+          "ticket_id": "key",
+          "title": "fields.summary",
+          "description": "fields.description",
+          "priority": "fields.priority.name",
+          "status": "fields.status.name",
+          "category": "fields.issuetype.name",
+          "assignee": "fields.assignee.displayName",
+          "caller": "fields.reporter.displayName",
+          "opened_at": "fields.created",
+          "resolved_at": "fields.resolutiondate",
+          "updated_at": "fields.updated"
+        }
+      }
+    },
+
+    {
+      "system": "Zendesk API (with pagination cursor)",
+      "description": "Zendesk wraps tickets in a 'tickets' array and uses cursor-based pagination. Some fields like priority use different value names.",
+      "sample_response": {
+        "tickets": [
+          {
+            "id": 12345,
+            "subject": "WiFi not working in conference room",
+            "description": "The WiFi signal in Room 204 is very weak...",
+            "priority": "high",
+            "status": "open",
+            "type": "incident",
+            "group": { "name": "Network Support" },
+            "assignee": { "name": "Maria Santos" },
+            "requester": { "name": "Tom Brown", "email": "t.brown@company.com" },
+            "created_at": "2026-03-15T08:00:00Z",
+            "updated_at": "2026-03-15T10:30:00Z",
+            "solved_at": null
+          }
+        ],
+        "meta": {
+          "has_more": true,
+          "after_cursor": "eyJpZCI6MTIzNDUsImNyZWF0ZWRfYXQiOiIifQ=="
+        }
+      },
+      "config": {
+        "response_items_path": "tickets",
+        "response_total_path": "",
+        "pagination_type": "cursor",
+        "pagination_params": {
+          "cursor_key": "page[start_after_cursor]",
+          "limit_key": "page[size]"
+        },
+        "custom_cursor_path": "meta.after_cursor",
+        "field_mapping": {
+          "ticket_id": "id",
+          "title": "subject",
+          "description": "description",
+          "priority": "priority",
+          "status": "status",
+          "category": "type",
+          "assignment_group": "group.name",
+          "assignee": "assignee.name",
+          "caller": "requester.name",
+          "opened_at": "created_at",
+          "resolved_at": "solved_at",
+          "updated_at": "updated_at"
+        },
+        "priority_map": {
+          "urgent": "Critical",
+          "high": "High",
+          "normal": "Medium",
+          "low": "Low"
+        },
+        "status_map": {
+          "new": "Open",
+          "open": "Open",
+          "pending": "On Hold",
+          "hold": "On Hold",
+          "solved": "Resolved",
+          "closed": "Closed"
+        }
+      }
+    },
+
+    {
+      "system": "Custom API with wrapped response and attribute nesting",
+      "description": "Some enterprise APIs wrap responses in metadata objects and nest data in 'attributes' sub-objects. This example shows a HAL-style response.",
+      "sample_response": {
+        "apiVersion": "v2",
+        "requestId": "req-abc-123",
+        "data": {
+          "items": [
+            {
+              "id": "tkt-9876",
+              "attributes": {
+                "subject": "Printer paper jam",
+                "content": "The HP printer on floor 3 keeps jamming...",
+                "severityLevel": "P3",
+                "lifecycleState": "RESOLVED",
+                "classification": "Hardware",
+                "supportTeam": "IT-Hardware-Support",
+                "owner": "James Okafor",
+                "reportedBy": "Alice Green",
+                "serviceAffected": "HP LaserJet M609"
+              },
+              "timestamps": {
+                "createdAt": "2026-01-20T11:30:00Z",
+                "updatedAt": "2026-01-25T16:00:00Z",
+                "resolvedAt": "2026-01-24T14:30:00Z",
+                "closedAt": "2026-01-27T09:00:00Z"
+              }
+            }
+          ],
+          "pagination": {
+            "totalRecords": 250,
+            "currentPage": 1,
+            "totalPages": 25,
+            "nextPageToken": "eyJwYWdlIjoyfQ=="
+          }
+        }
+      },
+      "config": {
+        "response_items_path": "data.items",
+        "response_total_path": "data.pagination.totalRecords",
+        "pagination_type": "cursor",
+        "pagination_params": {
+          "limit_key": "pageSize",
+          "cursor_key": "pageToken"
+        },
+        "custom_cursor_path": "data.pagination.nextPageToken",
+        "field_mapping": {
+          "ticket_id": "id",
+          "title": "attributes.subject",
+          "description": "attributes.content",
+          "priority": "attributes.severityLevel",
+          "status": "attributes.lifecycleState",
+          "category": "attributes.classification",
+          "assignment_group": "attributes.supportTeam",
+          "assignee": "attributes.owner",
+          "caller": "attributes.reportedBy",
+          "affected_service": "attributes.serviceAffected",
+          "opened_at": "timestamps.createdAt",
+          "updated_at": "timestamps.updatedAt",
+          "resolved_at": "timestamps.resolvedAt",
+          "closed_at": "timestamps.closedAt"
+        },
+        "priority_map": {
+          "P1": "Critical",
+          "P2": "High",
+          "P3": "Medium",
+          "P4": "Low"
+        },
+        "status_map": {
+          "NEW": "Open",
+          "IN_PROGRESS": "In Progress",
+          "ON_HOLD": "On Hold",
+          "RESOLVED": "Resolved",
+          "CLOSED": "Closed"
+        }
+      }
+    }
+  ],
+
+  "canonical_field_reference": {
+    "ticket_id": "Unique ticket identifier from the source system (e.g., INC0012345, PROJ-123, TKT-001)",
+    "title": "Short title or summary of the ticket (typically 5-15 words)",
+    "description": "Full description or body text (may be multi-paragraph)",
+    "priority": "Canonical priority: Critical, High, Medium, Low (normalized from source values)",
+    "status": "Canonical status: Open, In Progress, On Hold, Resolved, Closed (normalized from source values)",
+    "category": "Category or issue type (e.g., Hardware, Software, Network, Email, Security)",
+    "assignment_group": "Name of the support team or group assigned to the ticket",
+    "assignee": "Name of the individual person assigned to work on the ticket",
+    "opened_at": "ISO 8601 timestamp when the ticket was created/opened",
+    "resolved_at": "ISO 8601 timestamp when the ticket was resolved (null if not resolved)",
+    "closed_at": "ISO 8601 timestamp when the ticket was closed (null if not closed)",
+    "updated_at": "ISO 8601 timestamp of the last update to the ticket",
+    "source_system": "Name of the source system (auto-set to 'universal' by the adapter)",
+    "affected_service": "Name of the affected service, CI, or configuration item",
+    "caller": "Name of the person who created or reported the ticket"
+  }
+}

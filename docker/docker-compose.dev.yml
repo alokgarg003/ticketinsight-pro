@@ -1,0 +1,77 @@
+# =============================================================================
+# TicketInsight Pro — Docker Compose Development Override
+# =============================================================================
+# Extends the base docker-compose.yml with development-friendly settings:
+#   - Source mounted as a volume for hot reload
+#   - Flask development server instead of gunicorn
+#   - Debug port exposed for remote debugging
+#   - Verbose logging
+#
+# Usage:
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml up
+# =============================================================================
+
+services:
+  # ==========================================================================
+  # Application Service (Development Override)
+  # ==========================================================================
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      # In production we could have a separate dev target, but for now we
+      # override the command to use Flask's dev server
+    container_name: ticketinsight-app-dev
+    restart: "no"
+    ports:
+      - "5000:5000"
+      - "5678:5678"  # Debug port (debugpy / VS Code Remote Debugger)
+    env_file:
+      - ../.env
+    environment:
+      - APP_ENV=development
+      - APP_DEBUG=true
+      - PYTHONUNBUFFERED=1
+      - LOG_LEVEL=DEBUG
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-ticketinsight}:${POSTGRES_PASSWORD:-ticketinsight_secret}@postgres:5432/${POSTGRES_DB:-ticketinsight}
+      - REDIS_URL=redis://redis:6379/0
+      - TICKETINSIGHT_CONFIG=/app/config.yaml
+    volumes:
+      # Mount source code for hot-reload
+      - ../src:/app/src:ro
+      - ../web:/app/web:ro
+      - ../config.yaml:/app/config.yaml:ro
+      - app-data:/app/data
+      - app-logs:/app/logs
+    # Override CMD to use Flask dev server with auto-reload
+    command: >
+      python -m flask
+      --app src.ticketinsight.main:create_app()
+      run
+      --host 0.0.0.0
+      --port 5000
+      --debug
+      --reload
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  # ==========================================================================
+  # Metabase (Development — lower memory)
+  # ==========================================================================
+  metabase:
+    container_name: ticketinsight-metabase-dev
+    restart: "no"
+    environment:
+      MB_JETTY_PORT: 3000
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: ${METABASE_DB_NAME:-metabase}
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${POSTGRES_USER:-ticketinsight}
+      MB_DB_PASS: ${POSTGRES_PASSWORD:-ticketinsight_secret}
+      MB_DB_HOST: postgres
+      JAVA_OPTS: -Xmx256m -Xms128m

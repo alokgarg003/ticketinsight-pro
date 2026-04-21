@@ -1,0 +1,241 @@
+# =============================================================================
+# TicketInsight Pro - Jira Adapter Configuration
+# =============================================================================
+#
+# This configuration file defines how TicketInsight Pro connects to and
+# synchronises with Jira Cloud or Jira Server/Data Center via the REST API v3.
+#
+# Quick start:
+#   1. Copy this file to your project root as config.yaml
+#   2. Fill in your Jira server URL and credentials
+#   3. Run: ticketinsight sync --config config.yaml
+#
+# Reference (Cloud):   https://developer.atlassian.com/cloud/jira/platform/rest/v3/
+# Reference (Server):  https://docs.atlassian.com/software/jira/docs/api/REST/latest/
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Adapter type
+# ---------------------------------------------------------------------------
+adapter:
+  type: jira                          # Must be "jira" for this template
+
+  # -----------------------------------------------------------------------
+  # Jira connection settings
+  # -----------------------------------------------------------------------
+  jira:
+    # Jira server base URL.
+    # For Jira Cloud:    https://yourdomain.atlassian.net
+    # For Jira Server:   https://jira.yourcompany.com
+    # For Jira DC:       https://jira.yourcompany.com
+    server: "https://yourdomain.atlassian.net"
+
+    # -------------------------------------------------------------------
+    # Authentication
+    # -------------------------------------------------------------------
+    # Jira Cloud authentication uses email + API token.
+    # Generate an API token at: https://id.atlassian.com/manage-profile/security/api-tokens
+    #
+    # Jira Server/Data Center supports three auth methods:
+    #   1. Username + Password (Basic Auth)
+    #   2. Username + API Token (Basic Auth, if token auth is enabled)
+    #   3. Personal Access Token (PAT) — Bearer auth in header
+
+    # --- Method 1: Jira Cloud (email + API token) ---
+    username: ""                      # Your Atlassian email address
+    api_token: ""                     # API token from id.atlassian.com
+
+    # --- Method 2: Jira Server/Data Center (username + password) ---
+    # Uncomment the line below and remove/comment the api_token field.
+    # password: ""                    # Jira password (Server/DC only)
+
+    # --- Method 3: Jira Server/Data Center (Personal Access Token) ---
+    # Uncomment the line below and remove/comment username/password/api_token.
+    # PAT takes priority if set.
+    # pat: ""                         # Personal Access Token
+
+    # Auto-detection of Cloud vs Server:
+    # The adapter automatically detects Cloud deployments when the server URL
+    # contains ".atlassian.net". For custom Cloud domains (e.g., jira.acme.com),
+    # set this explicitly:
+    # is_cloud: true                  # Force Cloud mode (true/false)
+    #                                   Default: auto-detect from URL
+
+    # -------------------------------------------------------------------
+    # Issue filtering
+    # -------------------------------------------------------------------
+
+    # Default JQL query to filter issues.
+    # Applied on every sync if no override query is provided.
+    # Examples:
+    #   - "project = IT AND status != Done"           : Open IT issues
+    #   - "issuetype = Bug AND priority = Highest"    : Critical bugs
+    #   - "updated >= -7d"                             : Updated in last 7 days
+    #   - "labels = support AND status in (Open, 'In Progress')"
+    #   - "assignee is EMPTY"                          : Unassigned issues
+    #   - "created >= startOfMonth()"                  : Created this month
+    # Leave empty to fetch all issues (not recommended for large instances).
+    default_jql: "project = IT AND status != Done ORDER BY created DESC"
+
+    # Project key(s) to scope queries.
+    # When set, the adapter automatically adds a "project = KEY" clause to JQL.
+    # Can be a single key or a list of keys.
+    # Single project:
+    project: "IT"
+    # Multiple projects:
+    # project:
+    #   - IT
+    #   - OPS
+    #   - SEC
+
+    # -------------------------------------------------------------------
+    # Fields and data retrieval
+    # -------------------------------------------------------------------
+
+    # Comma-separated list of Jira fields to request from the search API.
+    # Only request fields you need to minimise response size and improve performance.
+    # Common useful fields:
+    #   key, summary, description, status, priority, issuetype, created,
+    #   updated, resolutiondate, assignee, reporter, labels, components,
+    #   project, comment, duedate, fixVersions, versions, environment,
+    #   timetracking, aggregateprogress, worklog, parent, subtasks
+    # Custom fields: customfield_10001, customfield_10002, etc.
+    fields: >-
+      key,summary,description,status,priority,issuetype,created,updated,
+      resolutiondate,assignee,reporter,labels,components,project,
+      comment,duedate,fixVersions,environment,worklog
+
+    # Number of issues to retrieve per API page.
+    # Jira Cloud maxResults limit: 100 (for most API calls).
+    # Jira Server maxResults limit: typically 1000.
+    # Default: 100
+    max_results: 100
+
+    # Expand options for additional data.
+    # comma-separated. Common options:
+    #   - renderedFields  : Include rendered HTML versions of fields
+    #   - names           : Include display names for keys
+    #   - schema          : Include field schema info
+    #   - transitions     : Include available workflow transitions
+    #   - changelog       : Include issue change history
+    # Warning: enabling expansions increases response size significantly.
+    expand: ""
+
+    # -------------------------------------------------------------------
+    # Custom field mappings for Jira custom fields
+    # -------------------------------------------------------------------
+    # Map Jira custom field IDs to canonical TicketInsight field names.
+    # Find custom field IDs in: Jira Settings > Issues > Custom Fields
+    # or via: /rest/api/3/field
+    #
+    # Example mappings:
+    # custom_field_mappings:
+    #   # Map a custom "Customer Impact" field to priority
+    #   "customfield_10010":
+    #     target: "priority"
+    #     transform: "impact_to_priority"  # Optional transform function
+    #
+    #   # Map a custom "Service" field to category
+    #   "customfield_10020":
+    #     target: "category"
+    #   # Map a custom "Resolution Notes" field to description
+    #   "customfield_10030":
+    #     target: "description"
+    custom_field_mappings: {}
+
+    # -------------------------------------------------------------------
+    # Issue type classification
+    # -------------------------------------------------------------------
+    # Map Jira issue types to TicketInsight categories.
+    # This is applied on top of the NLP classifier to ensure consistent
+    # categorisation for known issue types.
+    issue_type_category_map:
+      Bug: "Software"
+      Task: "Software"
+      Story: "Software"
+      Epic: "Software"
+      "Service Request": "Software"
+      Incident: "Hardware"
+      "Change Request": "Network"
+      "Access Request": "Access/Permissions"
+      "Security Incident": "Security"
+      "Service Request with Approvals": "HR/Onboarding"
+      "IT Help": "Software"
+      "Hardware Request": "Hardware"
+      "Network Issue": "Network"
+
+    # -------------------------------------------------------------------
+    # Connection and retry settings
+    # -------------------------------------------------------------------
+
+    # HTTP request timeout in seconds.
+    timeout: 60
+
+    # Retry attempts for transient failures (5xx, timeouts, rate limits).
+    retry_attempts: 3
+
+    # Base delay in seconds between retries (exponential backoff).
+    retry_delay: 5.0
+
+    # Maximum age of issues to fetch (days).
+    # Issues created more than this many days ago are excluded.
+    # Set to 0 for no age limit.
+    # Default: 180 (6 months)
+    max_issue_age_days: 180
+
+# ---------------------------------------------------------------------------
+# Pipeline settings
+# ---------------------------------------------------------------------------
+pipeline:
+  interval_minutes: 30
+  ticket_limit_per_run: 1000
+  enable_sentiment: true
+  enable_classification: true
+  enable_topic_modeling: true
+  enable_duplicate_detection: true
+  enable_anomaly_detection: true
+  enable_summarization: true
+  enable_ner: true
+  enable_root_cause: true
+
+# ---------------------------------------------------------------------------
+# NLP settings
+# ---------------------------------------------------------------------------
+nlp:
+  model: "en_core_web_sm"
+  min_confidence: 0.6
+  duplicate_threshold: 0.92
+  max_text_length: 10000
+  sentiment_model: "textblob"
+
+# ---------------------------------------------------------------------------
+# Database settings
+# ---------------------------------------------------------------------------
+database:
+  url: "sqlite:///data/ticketinsight.db"
+  pool_size: 10
+
+# ---------------------------------------------------------------------------
+# Logging settings
+# ---------------------------------------------------------------------------
+logging:
+  level: "INFO"
+  file: "logs/ticketinsight.log"
+  console_enabled: true
+
+# ---------------------------------------------------------------------------
+# Environment variable overrides
+# ---------------------------------------------------------------------------
+# You can override any setting with environment variables:
+#
+#   JIRA_SERVER        → adapter.jira.server
+#   JIRA_USERNAME      → adapter.jira.username
+#   JIRA_API_TOKEN     → adapter.jira.api_token
+#   JIRA_PASSWORD      → adapter.jira.password
+#   JIRA_PAT           → adapter.jira.pat
+#   TICKETINSIGHT_CONFIG → path to this config file
+#   DATABASE_URL       → database.url
+#   LOG_LEVEL          → logging.level
+#
+# Example: export JIRA_API_TOKEN="my-api-token"
+# =============================================================================

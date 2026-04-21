@@ -1,0 +1,228 @@
+# =============================================================================
+# TicketInsight Pro - ServiceNow Adapter Configuration
+# =============================================================================
+#
+# This configuration file defines how TicketInsight Pro connects to and
+# synchronises with a ServiceNow instance via its REST Table API.
+#
+# Quick start:
+#   1. Copy this file to your project root as config.yaml
+#   2. Fill in your ServiceNow instance URL and credentials
+#   3. Run: ticketinsight sync --config config.yaml
+#
+# Reference: https://docs.servicenow.com/bundle/sandiego-application-development/page/integrate/inbound-rest/concept/c_RESTAPI.html
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Adapter type — tells TicketInsight which adapter class to instantiate
+# ---------------------------------------------------------------------------
+adapter:
+  type: servicenow                    # Must be "servicenow" for this template
+
+  # -----------------------------------------------------------------------
+  # ServiceNow connection settings
+  # -----------------------------------------------------------------------
+  servicenow:
+    # Your ServiceNow instance URL (without trailing slash).
+    # Example for developer instance:  https://dev12345.service-now.com
+    # Example for custom domain:       https://it.acme.com
+    instance: "https://yourinstance.service-now.com"
+
+    # Authentication credentials.
+    # Option A: Basic authentication (username + password)
+    # This is the simplest auth method. The ServiceNow adapter sends
+    # these credentials as an HTTP Basic Auth header on every request.
+    username: ""                      # e.g. "admin" or "svc_ticketinsight"
+    password: ""                      # Consider using env vars: SNOW_PASSWORD
+
+    # Option B: OAuth 2.0 authentication (alternative to Basic Auth)
+    # Uncomment the block below and fill in your OAuth credentials.
+    # ServiceNow supports client_credentials grant type for server-to-server.
+    #
+    # oauth_client_id: ""              # OAuth 2.0 Client ID from ServiceNow
+    # oauth_client_secret: ""          # OAuth 2.0 Client Secret
+    # oauth_token_url: ""              # Auto-derived from instance URL if blank
+    #                                  # e.g. https://yourinstance.service-now.com/oauth_token.do
+
+    # HTTP request timeout in seconds.
+    # Increase this if your ServiceNow instance is slow or returns large result sets.
+    # Default: 60
+    timeout: 60
+
+    # ServiceNow table to query for tickets.
+    # Common tables:
+    #   - incident       : IT support incidents (most common)
+    #   - sc_req_item    : Service catalog requests
+    #   - change_request : Change management records
+    #   - problem        : Problem management records
+    #   - em_event       : Event management
+    default_table: "incident"
+
+    # Additional tables to query (beyond the default_table).
+    # Each table is queried separately and results are merged.
+    # Useful when you want to analyse both incidents and service requests together.
+    tables:
+      - incident
+      - sc_req_item
+      # - change_request
+      # - problem
+
+    # Comma-separated list of ServiceNow fields to retrieve.
+    # Only include fields you need to minimise payload size and improve performance.
+    # Reference fields (e.g., assignment_group, assigned_to, caller_id) return
+    # both a display value and a link by default when display_value is true.
+    # Available fields vary by table. Common incident fields:
+    #   number, short_description, description, priority, state, category,
+    #   assignment_group, assigned_to, opened_at, resolved_at, closed_at,
+    #   sys_updated_on, cmdb_ci, caller_id, impact, urgency, sys_created_on,
+    #   close_code, close_notes, work_notes, correlation_id, incident_state,
+    #   active, hold_reason, escalation, made_sla, contact_type, escalation
+    fields: >-
+      number,short_description,description,priority,state,category,
+      assignment_group,assigned_to,opened_at,resolved_at,closed_at,
+      sys_updated_on,cmdb_ci,caller_id,impact,urgency,sys_created_on,
+      close_code,close_notes,work_notes
+
+    # When true, ServiceNow returns display values for reference fields
+    # instead of sys_ids. For example, assignment_group returns "IT-Helpdesk"
+    # instead of "abc123def456...".
+    # Default: true
+    display_value: true
+
+    # Exclude reference links from the response to reduce payload size.
+    # Reference links are JSON objects with "display_value" and "link" keys.
+    # Set to false if you need the sys_id links for follow-up API calls.
+    # Default: true
+    exclude_reference_link: true
+
+    # Number of records to fetch per API request (pagination).
+    # ServiceNow supports up to 10,000 records per request.
+    # Larger batch sizes reduce the number of round-trips but may hit
+    # memory limits on very large datasets.
+    # Default: 500
+    batch_size: 100
+
+    # Interval in minutes between automatic synchronisation runs.
+    # Set to 0 to disable automatic sync (manual only).
+    # Default: 30
+    sync_interval_minutes: 30
+
+    # Number of retry attempts for transient HTTP errors (5xx, timeouts).
+    # The adapter uses exponential backoff between retries.
+    # Default: 3
+    retry_attempts: 3
+
+    # Base delay in seconds between retry attempts.
+    # Actual delay = retry_delay * 2^(attempt_number - 1).
+    # For example, with retry_delay=5: 5s, 10s, 20s
+    # Default: 5.0
+    retry_delay: 5.0
+
+    # ServiceNow encoded query to filter results.
+    # Examples:
+    #   - "active=true"                          : Only open/active incidents
+    #   - "priority=1^ORpriority=2"              : Critical and High priority only
+    #   - "opened_at>javascript:gs.dateGenerate('2025-01-01','00:00:00')"
+    #   - "assignment_groupLIKEIT-*"             : All IT assignment groups
+    #   - "category=inquiry^ORcategory=software" : Specific categories
+    # Leave empty to retrieve all records.
+    default_query: "active=true"
+
+    # Maximum number of tickets to retrieve per sync cycle.
+    # Set to 0 for unlimited (fetches all matching records).
+    # Useful during initial import to avoid overwhelming the system.
+    # Default: 0 (unlimited)
+    max_tickets_per_sync: 0
+
+    # Include work notes and close notes in the description field.
+    # When true, the adapter appends work_notes and close_notes to the
+    # main description, separated by headers.
+    # Default: true
+    include_work_notes: true
+
+    # Include additional comments/journal entries.
+    # When true, the adapter fetches additional comments from the
+    # sys_journal_field table and appends them to the description.
+    # This significantly increases fetch time for large datasets.
+    # Default: false
+    include_comments: false
+
+# ---------------------------------------------------------------------------
+# Pipeline settings — control how tickets are processed after ingestion
+# ---------------------------------------------------------------------------
+pipeline:
+  # Interval between pipeline runs (minutes).
+  interval_minutes: 30
+
+  # Maximum number of tickets to process per pipeline run.
+  ticket_limit_per_run: 1000
+
+  # Enable/disable individual NLP analysis stages.
+  enable_sentiment: true              # Analyse user sentiment in descriptions
+  enable_classification: true        # Auto-classify tickets by category
+  enable_topic_modeling: true        # Identify emerging topics and themes
+  enable_duplicate_detection: true   # Detect duplicate or near-duplicate tickets
+  enable_anomaly_detection: true     # Flag unusual tickets for review
+  enable_summarization: true         # Generate short summaries of long tickets
+  enable_ner: true                   # Extract named entities (servers, IPs, etc.)
+  enable_root_cause: true            # Suggest possible root causes
+
+# ---------------------------------------------------------------------------
+# NLP settings — fine-tune natural language processing behaviour
+# ---------------------------------------------------------------------------
+nlp:
+  # spaCy model to use for NER and text processing.
+  # Options: en_core_web_sm (fast, small), en_core_web_md (balanced), en_core_web_lg (accurate)
+  model: "en_core_web_sm"
+
+  # Minimum confidence threshold for classification predictions (0.0 - 1.0).
+  # Predictions below this threshold are treated as "Unclassified".
+  min_confidence: 0.6
+
+  # Similarity threshold for duplicate detection (0.0 - 1.0).
+  # Higher values are stricter (fewer false positives, more false negatives).
+  # Recommended: 0.85 - 0.95
+  duplicate_threshold: 0.92
+
+  # Maximum text length (characters) for NLP processing.
+  # Descriptions longer than this are truncated before analysis.
+  max_text_length: 10000
+
+# ---------------------------------------------------------------------------
+# Database settings — where normalised tickets are stored
+# ---------------------------------------------------------------------------
+database:
+  # SQLAlchemy connection URL.
+  # SQLite (for development):   sqlite:///data/ticketinsight.db
+  # PostgreSQL (for production): postgresql://user:pass@host:5432/dbname
+  url: "sqlite:///data/ticketinsight.db"
+
+  # Connection pool settings (PostgreSQL only).
+  pool_size: 10
+  pool_timeout: 30
+
+# ---------------------------------------------------------------------------
+# Logging settings
+# ---------------------------------------------------------------------------
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  level: "INFO"
+  file: "logs/ticketinsight.log"
+  console_enabled: true
+
+# ---------------------------------------------------------------------------
+# Environment variable overrides
+# ---------------------------------------------------------------------------
+# You can override any setting with environment variables:
+#
+#   SNOW_INSTANCE       → adapter.servicenow.instance
+#   SNOW_USERNAME       → adapter.servicenow.username
+#   SNOW_PASSWORD       → adapter.servicenow.password
+#   SNOW_OAUTH_CLIENT_ID   → adapter.servicenow.oauth_client_id
+#   SNOW_OAUTH_CLIENT_SECRET → adapter.servicenow.oauth_client_secret
+#   TICKETINSIGHT_CONFIG    → path to this config file
+#   DATABASE_URL        → database.url
+#   LOG_LEVEL           → logging.level
+#
+# Example: export SNOW_PASSWORD="my-secret-password"
+# =============================================================================

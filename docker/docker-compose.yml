@@ -1,0 +1,153 @@
+# =============================================================================
+# TicketInsight Pro — Docker Compose (Production)
+# =============================================================================
+# Full stack deployment with:
+#   - app:        Flask application (gunicorn)
+#   - postgres:   PostgreSQL 15 database
+#   - redis:      Redis 7 in-memory cache
+#   - metabase:   Metabase analytics dashboard
+#   - nginx:      Reverse proxy (optional, see nginx.conf)
+#
+# Usage:
+#   docker compose -f docker/docker-compose.yml up -d
+#   docker compose -f docker/docker-compose.yml logs -f app
+#   docker compose -f docker/docker-compose.yml down -v
+# =============================================================================
+
+services:
+  # ==========================================================================
+  # Application Service
+  # ==========================================================================
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: ticketinsight-app
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - ../.env
+    environment:
+      - APP_ENV=production
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-ticketinsight}:${POSTGRES_PASSWORD:-ticketinsight_secret}@postgres:5432/${POSTGRES_DB:-ticketinsight}
+      - REDIS_URL=redis://redis:6379/0
+      - TICKETINSIGHT_CONFIG=/app/config.yaml
+    volumes:
+      - app-data:/app/data
+      - app-logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/api/v1/health')"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+
+  # ==========================================================================
+  # PostgreSQL Database
+  # ==========================================================================
+  postgres:
+    image: postgres:15-alpine
+    container_name: ticketinsight-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-ticketinsight}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ticketinsight_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-ticketinsight}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-ticketinsight} -d ${POSTGRES_DB:-ticketinsight}"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+
+  # ==========================================================================
+  # Redis Cache
+  # ==========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: ticketinsight-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      start_period: 10s
+      retries: 5
+
+  # ==========================================================================
+  # Metabase Analytics Dashboard
+  # ==========================================================================
+  metabase:
+    image: metabase/metabase:latest
+    container_name: ticketinsight-metabase
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      MB_DB_TYPE: postgres
+      MB_DB_DBNAME: ${METABASE_DB_NAME:-metabase}
+      MB_DB_PORT: 5432
+      MB_DB_USER: ${POSTGRES_USER:-ticketinsight}
+      MB_DB_PASS: ${POSTGRES_PASSWORD:-ticketinsight_secret}
+      MB_DB_HOST: postgres
+      MB_JETTY_PORT: 3000
+      JAVA_OPTS: -Xmx512m -Xms256m
+    volumes:
+      - metabase-data:/metabase-data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      start_period: 60s
+      retries: 5
+
+# =============================================================================
+# Named Volumes
+# =============================================================================
+volumes:
+  postgres-data:
+    name: ticketinsight-postgres-data
+  redis-data:
+    name: ticketinsight-redis-data
+  metabase-data:
+    name: ticketinsight-metabase-data
+  app-data:
+    name: ticketinsight-app-data
+  app-logs:
+    name: ticketinsight-app-logs
+
+# =============================================================================
+# Networks
+# =============================================================================
+networks:
+  app-network:
+    name: ticketinsight-network
+    driver: bridge

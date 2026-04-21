@@ -1,0 +1,272 @@
+# =============================================================================
+# TicketInsight Pro - CSV/Excel Importer Configuration
+# =============================================================================
+#
+# This configuration file defines how TicketInsight Pro imports ticket data
+# from CSV (.csv, .tsv, .txt) or Excel (.xlsx, .xls) files.
+#
+# Quick start:
+#   1. Copy this file to your project root as config.yaml
+#   2. Update file_path to point to your CSV/Excel file
+#   3. Configure column_map if your columns differ from canonical names
+#   4. Run: ticketinsight import --config config.yaml
+#
+# The CSV adapter supports automatic field detection via alias matching.
+# If your CSV columns use standard names (like "Ticket ID", "Description",
+# "Priority"), you may not need a column_map at all.
+# =============================================================================
+
+# ---------------------------------------------------------------------------
+# Adapter type
+# ---------------------------------------------------------------------------
+adapter:
+  type: csv                           # Must be "csv" for this template
+
+  # -----------------------------------------------------------------------
+  # File settings
+  # -----------------------------------------------------------------------
+  csv:
+    # Path to the CSV or Excel file to import.
+    # Can be absolute or relative to the project root.
+    # Supported formats: .csv, .tsv, .txt, .xlsx, .xls
+    file_path: "samples/sample_tickets.csv"
+
+    # -------------------------------------------------------------------
+    # Column mapping
+    # -------------------------------------------------------------------
+    # Maps source column names (left) to canonical TicketInsight fields (right).
+    #
+    # Canonical fields:
+    #   ticket_id        : Unique ticket identifier
+    #   title            : Short title/summary
+    #   description      : Full description/body
+    #   priority         : Critical, High, Medium, Low
+    #   status           : Open, In Progress, On Hold, Resolved, Closed
+    #   category         : Hardware, Software, Network, etc.
+    #   assignment_group : Support team or group name
+    #   assignee         : Person assigned to the ticket
+    #   opened_at        : Date/time when ticket was created
+    #   resolved_at      : Date/time when ticket was resolved
+    #   closed_at        : Date/time when ticket was closed
+    #   updated_at       : Date/time of last update
+    #   source_system    : Name of the source system
+    #   affected_service : Related service or CI name
+    #   caller           : Person who opened the ticket
+    #
+    # If a source column is not listed here, the adapter uses automatic
+    # alias matching (case-insensitive, handles spaces/underscores/hyphens).
+    #
+    # The column_map is OPTIONAL — only needed if your column names are
+    # unusual and not detected automatically.
+    column_map:
+      # Example 1: Mapping standard ServiceNow export columns
+      # "number": "ticket_id"
+      # "short_description": "title"
+      # "description": "description"
+      # "priority": "priority"
+      # "state": "status"
+      # "category": "category"
+      # "assignment_group": "assignment_group"
+      # "assigned_to": "assignee"
+      # "sys_created_on": "opened_at"
+      # "resolved_at": "resolved_at"
+      # "closed_at": "closed_at"
+      # "sys_updated_on": "updated_at"
+      # "cmdb_ci": "affected_service"
+      # "caller_id": "caller"
+
+      # Example 2: Mapping Jira export columns
+      # "Issue key": "ticket_id"
+      # "Summary": "title"
+      # "Description": "description"
+      # "Priority": "priority"
+      # "Status": "status"
+      # "Issue Type": "category"
+      # "Assignee": "assignee"
+      # "Reporter": "caller"
+      # "Created": "opened_at"
+      # "Resolution Date": "resolved_at"
+      # "Updated": "updated_at"
+
+      # Example 3: Mapping a generic IT helpdesk export
+      # "Ticket #": "ticket_id"
+      # "Subject": "title"
+      # "Details": "description"
+      # "Urgency": "priority"
+      # "State": "status"
+      # "Type": "category"
+      # "Support Team": "assignment_group"
+      # "Technician": "assignee"
+      # "Date Opened": "opened_at"
+      # "Date Resolved": "resolved_at"
+      # "Date Closed": "closed_at"
+      # "Last Modified": "updated_at"
+      # "Source": "source_system"
+      # "Requester": "caller"
+
+      # Example 4: Mapping columns with special characters
+      # "Ticket No.": "ticket_id"
+      # "Short Desc": "title"
+      # "Long Description": "description"
+      # "Impact Level": "priority"
+      # "Current Status": "status"
+      # "Request Category": "category"
+      # "Assigned Group": "assignment_group"
+
+    # -------------------------------------------------------------------
+    # File format settings
+    # -------------------------------------------------------------------
+
+    # CSV delimiter character.
+    # Common values: "," (comma), ";" (semicolon), "\t" (tab), "|" (pipe)
+    # Set to "auto" to auto-detect using csv.Sniffer (default behavior).
+    delimiter: "auto"
+
+    # File character encoding.
+    # Common values: utf-8, utf-8-sig (with BOM), latin-1, cp1252
+    # Set to "auto" to auto-detect by trying multiple encodings.
+    encoding: "auto"
+
+    # Excel sheet name or index (for .xlsx/.xls files only).
+    # Can be a string (sheet name) or integer (0-based index).
+    # Default: 0 (first sheet)
+    # sheet_name: "Sheet1"
+    # sheet_name: 0
+
+    # Number of initial rows to skip (e.g., if file has a title row
+    # before the actual header).
+    skip_rows: 0
+
+    # -------------------------------------------------------------------
+    # Date parsing settings
+    # -------------------------------------------------------------------
+
+    # Expected date format string (strftime format).
+    # Used to parse date columns (opened_at, resolved_at, closed_at, updated_at).
+    # Common formats:
+    #   "%Y-%m-%dT%H:%M:%S"        : ISO 8601 (2026-01-15T10:30:00)
+    #   "%Y-%m-%d %H:%M:%S"        : Common datetime (2026-01-15 10:30:00)
+    #   "%Y-%m-%d"                  : Date only (2026-01-15)
+    #   "%m/%d/%Y %H:%M"            : US format (01/15/2026 10:30)
+    #   "%d/%m/%Y %H:%M"            : EU format (15/01/2026 10:30)
+    #   "%Y-%m-%dT%H:%M:%S%z"       : ISO with timezone
+    #   "%Y-%m-%dT%H:%M:%SZ"       : ISO UTC
+    #
+    # If not set, the parser tries multiple common formats automatically.
+    date_format: ""
+
+    # -------------------------------------------------------------------
+    # Priority normalization
+    # -------------------------------------------------------------------
+    # Map source priority values to canonical TicketInsight priorities.
+    # The adapter has built-in normalization for common patterns, but
+    # you can override or extend it here.
+    #
+    # Built-in mappings already handle:
+    #   1, P1, Critical, Urgent, Emergency → "Critical"
+    #   2, P2, High, High Priority       → "High"
+    #   3, P3, Medium, Normal, Standard  → "Medium"
+    #   4, P4, Low, Low Priority, Minor  → "Low"
+    #
+    # Add custom mappings here:
+    # priority_map:
+    #   "Sev 1": "Critical"
+    #   "Sev 2": "High"
+    #   "Sev 3": "Medium"
+    #   "Sev 4": "Low"
+    #   "Blocker": "Critical"
+    #   "Major": "High"
+    #   "Minor": "Low"
+    #   "Trivial": "Low"
+
+    # -------------------------------------------------------------------
+    # Status normalization
+    # -------------------------------------------------------------------
+    # Map source status values to canonical TicketInsight statuses.
+    #
+    # Built-in mappings already handle:
+    #   New, Open, Logged              → "Open"
+    #   In Progress, Working, Active   → "In Progress"
+    #   Pending, On Hold, Waiting      → "On Hold"
+    #   Resolved, Fixed, Completed     → "Resolved"
+    #   Closed, Cancelled              → "Closed"
+    #
+    # Add custom mappings here:
+    # status_map:
+    #   "Awaiting Customer": "On Hold"
+    #   "Awaiting Vendor": "On Hold"
+    #   "With Developer": "In Progress"
+    #   "Approved": "Resolved"
+    #   "Rejected": "Closed"
+    #   "Duplicate": "Closed"
+
+    # -------------------------------------------------------------------
+    # Processing settings
+    # -------------------------------------------------------------------
+
+    # Number of rows to process per batch.
+    # Larger batches are faster but use more memory.
+    # Default: 1000
+    batch_size: 1000
+
+    # Maximum number of tickets to import.
+    # Set to 0 for unlimited (import all rows).
+    # Useful for testing with large files.
+    max_tickets: 0
+
+    # Whether to deduplicate tickets based on ticket_id.
+    # When true, if two rows have the same ticket_id, only the last
+    # occurrence is kept.
+    deduplicate: true
+
+    # Source system name to tag imported tickets with.
+    # This value is stored in the "source_system" field of each ticket.
+    # If not set, defaults to "csv".
+    source_name: "csv_import"
+
+# ---------------------------------------------------------------------------
+# Pipeline settings
+# ---------------------------------------------------------------------------
+pipeline:
+  interval_minutes: 0                # Disabled for file imports (one-time)
+  ticket_limit_per_run: 10000
+  enable_sentiment: true
+  enable_classification: true
+  enable_topic_modeling: true
+  enable_duplicate_detection: true
+  enable_anomaly_detection: true
+  enable_summarization: true
+  enable_ner: true
+  enable_root_cause: true
+
+# ---------------------------------------------------------------------------
+# NLP settings
+# ---------------------------------------------------------------------------
+nlp:
+  model: "en_core_web_sm"
+  min_confidence: 0.6
+  duplicate_threshold: 0.92
+  max_text_length: 10000
+
+# ---------------------------------------------------------------------------
+# Database settings
+# ---------------------------------------------------------------------------
+database:
+  url: "sqlite:///data/ticketinsight.db"
+  pool_size: 10
+
+# ---------------------------------------------------------------------------
+# Logging settings
+# ---------------------------------------------------------------------------
+logging:
+  level: "INFO"
+  file: "logs/ticketinsight.log"
+  console_enabled: true
+
+# ---------------------------------------------------------------------------
+# Environment variable overrides
+# ---------------------------------------------------------------------------
+# CSV_FILE_PATH  → adapter.csv.file_path
+# DATABASE_URL   → database.url
+# LOG_LEVEL      → logging.level
+# =============================================================================

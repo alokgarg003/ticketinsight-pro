@@ -1,0 +1,302 @@
+# =============================================================================
+# TicketInsight Pro — Default Configuration
+# =============================================================================
+# This is the default YAML configuration file for TicketInsight Pro.
+# It is loaded by ConfigManager and can be overridden by:
+#   1. Environment variables (highest priority)
+#   2. .env file
+#   3. This YAML file
+#   4. Built-in defaults in config.py (lowest priority)
+#
+# Copy this file to config.yaml and customise for your environment.
+# =============================================================================
+
+# =============================================================================
+# Application Settings
+# =============================================================================
+app:
+  # Environment: development | staging | production | testing
+  env: development
+
+  # Enable Flask debug mode (auto-reload, detailed errors)
+  debug: true
+
+  # Server binding
+  host: "0.0.0.0"
+  port: 5000
+
+  # Secret key for session management — CHANGE IN PRODUCTION!
+  secret_key: "dev-secret-change-me-in-production"
+
+  # Flask testing mode
+  testing: false
+
+# =============================================================================
+# Database Configuration
+# =============================================================================
+database:
+  # Connection URL — supports SQLite and PostgreSQL
+  # SQLite (development):  sqlite:///data/ticketinsight.db
+  # PostgreSQL:            postgresql://user:pass@host:5432/dbname
+  url: "sqlite:///data/ticketinsight.db"
+
+  # Connection pool settings (PostgreSQL only)
+  pool_size: 10
+  pool_timeout: 30
+  max_overflow: 20
+
+  # Echo SQL statements to logs (useful for debugging)
+  echo: false
+
+  # SQLAlchemy event system (set to false in production for performance)
+  track_modifications: true
+
+# =============================================================================
+# Redis Cache Configuration
+# =============================================================================
+redis:
+  # Redis connection URL
+  url: "redis://localhost:6379/0"
+
+  # Default cache TTL in seconds (1 hour)
+  cache_ttl: 3600
+
+  # Connection timeouts
+  socket_timeout: 5
+  socket_connect_timeout: 5
+
+  # Retry on connection timeout
+  retry_on_timeout: true
+
+# =============================================================================
+# Logging Configuration
+# =============================================================================
+logging:
+  # Log level: DEBUG | INFO | WARNING | ERROR | CRITICAL
+  level: "INFO"
+
+  # Log file path (relative to project root)
+  file: "logs/ticketinsight.log"
+
+  # Log format string
+  format: "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s"
+
+  # Date format for log timestamps
+  date_format: "%Y-%m-%d %H:%M:%S"
+
+  # Rotating file handler settings
+  max_bytes: 10485760    # 10 MB per file
+  backup_count: 5        # Keep 5 rotated log files
+
+  # Enable/disable log destinations
+  console_enabled: true
+  file_enabled: true
+
+# =============================================================================
+# Adapter Configuration
+# =============================================================================
+# Controls how tickets are ingested from external source systems.
+# The "type" field determines which adapter is used.
+
+adapter:
+  # Adapter type: csv | servicenow | jira | universal
+  type: "csv"
+
+  # Common settings
+  batch_size: 500         # Tickets per batch during ingestion
+  timeout: 60             # Request timeout in seconds
+  retry_attempts: 3       # Number of retries on failure
+  retry_delay: 5          # Delay between retries (seconds)
+
+  # --- CSV Adapter ---
+  csv_file_path: "data/samples/tickets_sample.csv"
+
+  # --- ServiceNow Adapter ---
+  # Instance URL (e.g. yourcompany.service-now.com)
+  snow_instance: ""
+  # API credentials
+  snow_username: ""
+  snow_password: ""
+  # Table and field mappings
+  snow_table: "incident"
+  snow_batch_size: 100
+  snow_date_field: "sys_created_on"
+
+  # --- Jira Adapter ---
+  # Server URL (e.g. https://yourcompany.atlassian.net)
+  jira_server: ""
+  # API credentials (email + API token)
+  jira_username: ""
+  jira_api_token: ""
+  # Project and issue settings
+  jira_project_key: ""
+  jira_issue_type: "Incident"
+  jira_jql: ""
+  jira_batch_size: 100
+
+  # --- Universal Adapter ---
+  universal_endpoint: ""
+  universal_api_key: ""
+  universal_mapping: {}
+
+# =============================================================================
+# NLP (Natural Language Processing) Configuration
+# =============================================================================
+nlp:
+  # spaCy language model
+  model: "en_core_web_sm"
+
+  # Processing batch size
+  batch_size: 32
+
+  # spaCy pipeline components to disable for performance
+  # Keep "ner" for entity recognition; disable "parser" and "tagger" if not needed
+  disable_pipes:
+    - "parser"
+    - "tagger"
+
+  # Minimum confidence threshold for classification results
+  min_confidence: 0.6
+
+  # Maximum text length (characters) for NLP processing
+  max_text_length: 10000
+
+  # --- Sentiment Analysis ---
+  # Sentiment model: textblob | vader | both
+  sentiment_model: "textblob"
+
+  # --- Classification ---
+  # Classification model: logistic_regression | svm | keyword | ensemble
+  classification_model: "logistic_regression"
+
+  # --- Topic Modeling ---
+  topic_num_topics: 8       # Number of topic clusters
+  topic_num_keywords: 6     # Keywords per topic
+
+  # --- Duplicate Detection ---
+  # Similarity threshold (0.0 - 1.0). Higher = stricter matching.
+  duplicate_threshold: 0.92
+
+  # --- Anomaly Detection ---
+  # Contamination rate for Isolation Forest (expected anomaly ratio)
+  anomaly_contamination: 0.05
+
+  # --- Summarization ---
+  # Maximum sentences in generated summary
+  summary_max_sentences: 3
+  # Minimum compression ratio
+  summary_min_compression: 0.3
+
+  # --- NER (Named Entity Recognition) ---
+  # Additional IT-specific entity patterns
+  ner_custom_patterns: []
+  # Include IT-specific entity types (IP addresses, software names, etc.)
+  ner_extract_it_entities: true
+
+  # --- Root Cause Analysis ---
+  # Number of root cause clusters
+  root_cause_num_clusters: 5
+  # Minimum confidence for root cause prediction
+  root_cause_min_confidence: 0.4
+
+# =============================================================================
+# Pipeline Configuration
+# =============================================================================
+# Controls the automated ticket processing pipeline.
+
+pipeline:
+  # How often to run the pipeline (in minutes)
+  interval_minutes: 30
+
+  # Maximum concurrent pipeline workers
+  max_concurrent_workers: 2
+
+  # Maximum tickets to process per pipeline run
+  ticket_limit_per_run: 1000
+
+  # --- Enable/disable individual pipeline stages ---
+  enable_sentiment: true
+  enable_classification: true
+  enable_topic_modeling: true
+  enable_duplicate_detection: true
+  enable_anomaly_detection: true
+  enable_summarization: true
+  enable_ner: true
+  enable_root_cause: true
+
+# =============================================================================
+# Insights & Dashboard Configuration
+# =============================================================================
+insights:
+  # Dashboard auto-refresh interval (seconds)
+  dashboard_refresh_interval: 300
+
+  # Number of top categories to show in dashboard
+  top_n_categories: 10
+
+  # Trend analysis window (days)
+  trend_window_days: 30
+
+  # Heatmap time resolution: hourly | daily | weekly
+  heatmap_resolution: "daily"
+
+  # --- Report Generation ---
+  # Default report format: json | csv | html
+  default_report_format: "json"
+  # Include raw data in reports
+  include_raw_data: false
+
+# =============================================================================
+# CORS (Cross-Origin Resource Sharing) Configuration
+# =============================================================================
+cors:
+  # Allowed origins (use ["*"] for development only)
+  origins:
+    - "http://localhost:3000"
+    - "http://localhost:5000"
+    - "http://127.0.0.1:3000"
+    - "http://127.0.0.1:5000"
+
+  # Allowed HTTP methods
+  methods:
+    - "GET"
+    - "POST"
+    - "PUT"
+    - "PATCH"
+    - "DELETE"
+    - "OPTIONS"
+
+  # Allowed request headers
+  allow_headers:
+    - "Content-Type"
+    - "Authorization"
+    - "X-Requested-With"
+
+  # Allow credentials (cookies, HTTP auth)
+  supports_credentials: true
+
+  # Preflight cache duration (seconds)
+  max_age: 3600
+
+# =============================================================================
+# Metabase Integration Configuration
+# =============================================================================
+metabase:
+  # Metabase server URL
+  url: ""
+
+  # Metabase API key for programmatic access
+  api_key: ""
+
+  # How often to sync dashboards (minutes)
+  sync_interval_minutes: 60
+
+  # Specific dashboard IDs to track (empty = all)
+  dashboard_ids: []
+
+  # Metabase database ID (auto-configured on first connection)
+  database_id: null
+
+  # Embedding settings
+  enable_embedding: false
+  embedding_secret_key: ""
