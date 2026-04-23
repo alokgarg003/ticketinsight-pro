@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest an improvement, new adapter, or analytics capability
+title: "[Feature]: "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What workflow, pain point, or use case is missing?
+      placeholder: I want to improve...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: Describe the change you want to see
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Example data sources, user stories, screenshots, or constraints

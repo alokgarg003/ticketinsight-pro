@@ -19,7 +19,7 @@ Perfect for help desk analytics, incident management, ticket classification, sen
 **Keywords:** ticket analytics, IT support, help desk, incident management, NLP, machine learning, Flask, Python, open source, zero cost, ServiceNow, Jira, CSV, REST API, sentiment analysis, duplicate detection, anomaly detection, root cause analysis, topic modeling, dashboard, reporting.
 
 [Features](#features) • [Quick Start](#quick-start) • [Architecture](#architecture) •
-[API Reference](#api-reference) • [Configuration](#configuration) • [Deployment](#deployment]
+[API Reference](#api-reference) • [Configuration](#configuration) • [Deployment](#docker-deployment)
 
 </div>
 
